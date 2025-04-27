@@ -6,36 +6,34 @@ import pandas as pd
 
 def tullyscraper(playwright: Playwright) -> None:
     browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context()
-        page = context.new_page()
-        page.goto("https://www.tullysgoodtimes.com/menus/")
-    
-        extracted_items = []
+    context = browser.new_context()
+    page = context.new_page()
+    page.goto("https://www.tullysgoodtimes.com/menus/")
 
-        titles = page.query_selector_all("h3.foodmenu__menu-section-title")
-        for title in titles:
-            title_text = title.inner_text()
-            print("MENU SECTION:", title_text)
+    extracted_items = []
 
-            # Find the sibling's sibling
-            row = title.evaluate_handle("node => node.nextElementSibling?.nextElementSibling")
+    titles = page.query_selector_all("h3.foodmenu__menu-section-title")
+    for title in titles:
+        title_text = title.inner_text()
+        print("MENU SECTION:", title_text)
 
-            if row:
-                items = row.query_selector_all("div.foodmenu__menu-item")
-                for item in items:
-                    item_text = item.inner_text()
-                    extracted_item = extract_menu_item(title_text, item_text)
-                    print(f"  MENU ITEM: {extracted_item.name}")
-                    extracted_items.append(extracted_item.to_dict())
+        # Find the sibling's sibling
+        row = title.evaluate_handle("node => node.nextElementSibling?.nextElementSibling")
 
-        df = pd.DataFrame(extracted_items)
-        df.to_csv("tullys_menu.csv", index=False)
+        if row:
+            items = row.query_selector_all("div.foodmenu__menu-item")
+            for item in items:
+                item_text = item.inner_text()
+                extracted_item = extract_menu_item(title_text, item_text)
+                print(f"  MENU ITEM: {extracted_item.name}")
+                extracted_items.append(extracted_item.to_dict())
 
-        context.close()
-        browser.close()
+    df = pd.DataFrame(extracted_items)
+    df.to_csv("tullys_menu.csv", index=False)
 
-# Call the function
-tullyscraper()
+    context.close()
+    browser.close()
+
 
 
 with sync_playwright() as playwright:
